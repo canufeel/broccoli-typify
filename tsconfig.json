@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "outDir": "dist/"
+  },
+  "files": [
+    "src/broccoli-dest-copy.ts",
+    "src/broccoli-merge-trees.ts",
+    "src/broccoli-replace.ts",
+    "src/broccoli-tree-stabilizer.ts",
+    "src/broccoli-typescript.ts",
+    "src/diffing-broccoli-plugin.ts",
+    "src/index.ts",
+    "src/tree-differ.ts"
+  ]
+}
