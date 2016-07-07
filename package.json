@@ -1,6 +1,6 @@
 {
   "name": "broccoli-typify",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Provide broccoli building blocks for typescript pipelines.",
   "main": "dist/index.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "broccoli-funnel": "^1.0.2",
     "broccoli-merge-trees": "^1.1.1",
     "broccoli-persistent-filter": "^1.0.1",
+    "findup": "^0.1.5",
     "fs": "0.0.2",
     "fs-extra": "^0.30.0",
     "symlink-or-copy": "^1.1.3",

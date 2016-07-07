@@ -49,6 +49,14 @@ describe('transpile Typescript', function() {
     });
   });
 
+  describe('loadProjectTsconfig', function(){
+    it('loads the file', function() {
+      var load = Typify.loadProjectTsconfig(__dirname);
+      expect(load.errors).to.be.empty();
+      expect(load.options.target).to.not.be.empty();
+    });
+  });
+
 
   describe('tsOptions', function() {
 
@@ -77,10 +85,10 @@ describe('transpile Typescript', function() {
         return builder.build().then(function(results) {
           var outputPath = results.directory;
 
-          var output = fs.readFileSync(outputPath + '/fixtures.js').toString();
-          var input = fs.readFileSync(expectations + '/expected.js').toString();
+          var output = fs.readFileSync(outputPath + '/fixtures.js').toString().replace(/\s+/g, ' ');
+          var input = fs.readFileSync(expectations + '/expected.js').toString().replace(/\s+/g, ' ');
 
-          expect(output.replace(/\s+/g, ' ')).to.eql(input.replace(/\s+/g, ' '));
+          expect(output).to.eql(input);
         });
       });
     });

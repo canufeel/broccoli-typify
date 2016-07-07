@@ -33,9 +33,8 @@ const originalEmitFiles: Function = (<any>ts).emitFiles;
   return originalEmitFiles(resolver, host, targetSourceFile);
 };
 
-interface DiffingCompilerOptions{
-  tsconfig?: string,
-  tsOptions?: ts.CompilerOptions,
+export interface DiffingCompilerOptions {
+  tsOptions: ts.CompilerOptions,
   rootFilePaths?: string[],
   internalTypings?: boolean
 }
@@ -75,16 +74,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       this.genInternalTypings = true;
     }
 
-    /*
-     * Read the config.
-     * There is no good way to report errors from here, consider reading the config in the caller.
-     */
-    if (options && options.tsconfig) {
-      var content = fs.readFileSync(options.tsconfig)['compilerOptions'];
-      this.tsOpts = ts.convertCompilerOptionsFromJson(content, inputPath).options;
-    } else {
-      this.tsOpts = (options && options.tsOptions) || {};
-    }
+    this.tsOpts = (options && options.tsOptions) || {};
 
     if ((<any>this.tsOpts).stripInternal === false) {
       // @internal are included in the generated .d.ts, do not generate them separately

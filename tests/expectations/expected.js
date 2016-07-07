@@ -9,4 +9,4 @@ var Person = (function () {
     };
     return Person;
 }());
-document.body.innerHTML = new types_1["default"]().greet(new Person("Godfrey"));
+document.body.innerHTML = new types_1.default().greet(new Person("Godfrey"));
