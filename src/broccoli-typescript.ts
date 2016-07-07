@@ -3,6 +3,7 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
+import debugBase = require('debug');
 import * as ts from 'typescript';
 import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
 
@@ -61,7 +62,11 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
   // true)
   private genInternalTypings: boolean = false;
 
-  static includeExtensions = ['.ts'];
+  static includeExtensions = ['.ts','.js'];
+
+  _debug(message) {
+      debugBase('broccoli-typify:').apply(null, arguments);
+  }
 
   constructor(public inputPath: string, public cachePath: string, public options?: DiffingCompilerOptions ) {
     if (options && options.rootFilePaths) {
@@ -191,6 +196,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
   }
 
   private doFullBuild() {
+    this._debug("doing a full build");
     let program = this.tsService.getProgram();
     let typeChecker = program.getTypeChecker();
     let diagnostics: ts.Diagnostic[] = [];

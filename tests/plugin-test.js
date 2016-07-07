@@ -113,7 +113,7 @@ describe('transpile Typescript', function() {
 
     afterEach(function() {
       rimraf.sync('tests/fixtures/files/apple.ts');
-      rimraf.sync('tests/fixtures/files/orange.ts');
+      rimraf.sync('tests/fixtures/files/orange.js');
 
       rimraf.sync('tests/fixtures/files/red/');
       rimraf.sync('tests/fixtures/files/orange/');
@@ -133,8 +133,7 @@ describe('transpile Typescript', function() {
       expect(entries).to.have.length(2);
 
       fs.writeFileSync('tests/fixtures/files/apple.ts', 'var apple : String;');
-      // note: initial test was with .js, will get back to it later.
-      fs.writeFileSync('tests/fixtures/files/orange.ts', 'var orange;');
+      fs.writeFileSync('tests/fixtures/files/orange.js', 'var orange;');
 
       /* New folders not supported by the DiffingTSCompiler.
 

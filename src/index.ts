@@ -19,18 +19,19 @@ export function toTypescriptOptions(options:any, basePath:string):{
   return ts.convertCompilerOptionsFromJson(options, basePath);
 }
 
-/**
- * Load the configuration from the tsconfig.json file for the consuming project.
- */
-
-export function loadProjectTsconfig(root:string):{
+export interface LoadedOptions {
   options:ts.CompilerOptions;
   errors:ts.Diagnostic[];
-} {
-  const path = findConfig(root);
-  if (path) {
-    var content = JSON.parse(fs.readFileSync(path).toString('utf8'));
-    return ts.convertCompilerOptionsFromJson(content['compilerOptions'], path);
+}
+
+/**
+ * Load the given tsconfig.json file.
+ */
+
+function loadTsconfig(tsconfigPath:string):LoadedOptions {
+  if (tsconfigPath) {
+    var content = JSON.parse(fs.readFileSync(tsconfigPath).toString('utf8'));
+    return ts.convertCompilerOptionsFromJson(content['compilerOptions'], tsconfigPath);
   }
   return {
     options: undefined, errors: [{
@@ -45,14 +46,21 @@ export function loadProjectTsconfig(root:string):{
 }
 
 /**
- * Re-export the Compiler Plugin, resolve file if not passed in.
+ * Load the configuration from the tsconfig.json file for the consuming project.
  */
-export {DiffingCompilerOptions};
+export function loadProjectTsconfig(root:string): LoadedOptions {
+  const path = findConfig(root);
+  return loadTsconfig(path);
+}
 
-export function Compiler(tree: BroccoliTree, options?: DiffingCompilerOptions): any {
+export interface CompilerOptions extends DiffingCompilerOptions {
+  tsconfig?: string;
+}
+
+export function Compiler(tree: BroccoliTree, options?: CompilerOptions): any {
   let resolvedOptions = options;
-  if (!options) {
-    var loaded = loadProjectTsconfig(__dirname);
+  if (!options || options.tsconfig) {
+    var loaded = (options && options.tsconfig) ? loadTsconfig(options.tsconfig): loadProjectTsconfig(__dirname);
     if (loaded.errors.length) {
       throw "Errors loading tsconfig " + loaded.errors.join("\n");
     }

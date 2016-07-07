@@ -3,6 +3,7 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
+import debug = require('debug');
 import {TreeDiffer, DiffResult} from './tree-differ';
 import stabilizeTree from './broccoli-tree-stabilizer';
 let symlinkOrCopy = require('symlink-or-copy');
@@ -89,12 +90,22 @@ class DiffingPluginWrapper implements BroccoliTree {
     this.diffResult = <DiffResult>(value);
   }
 
+  private _debug(message) {
+    debug(`broccoli-typify ( ${this.description} )`)(message);
+  }
+
   rebuild(): (Promise<any>|void) {
     try {
+      debugger;
+      this._debug("entering rebuild");
       let firstRun = !this.initialized;
       this.init();
 
       let diffResult = this.getDiffResult();
+      let firstDiff = (diffResult instanceof DiffResult) ? diffResult : diffResult[0];
+      if (firstDiff) {
+        this._debug(`diff Result added ${firstDiff.addedPaths.length}, removed ${firstDiff.removedPaths.length}`);
+      }
 
       let result = this.wrappedPlugin.rebuild(diffResult);
 
@@ -113,6 +124,7 @@ class DiffingPluginWrapper implements BroccoliTree {
       this.relinkOutputAndCachePaths();
     } catch (e) {
       e.message = `[${this.description}]: ${e.message}`;
+      this._debug(`exception in rebuild(): ${e.message}`);
       throw e;
     }
   }
