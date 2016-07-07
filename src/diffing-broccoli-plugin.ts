@@ -91,13 +91,12 @@ class DiffingPluginWrapper implements BroccoliTree {
   }
 
   private _debug(message) {
-    debug(`broccoli-typify ( ${this.description} )`)(message);
+    debug(`broccoli-typify`)(`${this.description}: ${message}`);
   }
 
   rebuild(): (Promise<any>|void) {
     try {
       debugger;
-      this._debug("entering rebuild");
       let firstRun = !this.initialized;
       this.init();
 

@@ -1,6 +1,7 @@
 /// <reference path="../types/all.d.ts" />
 'use strict';
 
+import debug = require('debug');
 import {Compiler as BroccoliCompiler, DiffingCompilerOptions} from './broccoli-typescript';
 import * as ts from 'typescript';
 import findConfig from './find-config';
@@ -66,6 +67,7 @@ export function Compiler(tree: BroccoliTree, options?: CompilerOptions): any {
     }
     resolvedOptions = { tsOptions: loaded.options};
   }
+  debug('broccoli-typify')(`Intializing compiler with ${JSON.stringify(resolvedOptions)}`);
   return BroccoliCompiler(tree, resolvedOptions);
 }
 
