@@ -144,37 +144,6 @@ describe('transpile Typescript', function() {
         expect(entries).to.not.deep.equal(lastEntries);
         expect(entries).to.have.length(4);
 
-        rimraf.sync('tests/fixtures/files/apple.ts');
-        fs.writeFileSync('tests/fixtures/files/orange.js', 'var orange : String;');
-
-        rimraf.sync('tests/fixtures/files/red/');
-
-        rimraf.sync('tests/fixtures/files/red/one.ts');
-        fs.writeFileSync('tests/fixtures/files/orange/two.js', 'var wasTwo;');
-
-        return builder.build();
-      }).then(function(results) {
-        var entries = walkSync.entries(results.directory);
-
-        expect(entries).to.not.deep.equal(lastEntries);
-        expect(entries).to.have.length(5);
-
-        // expected stability
-        expect(entryFor('fixtures.js', entries)).to.eql(entryFor('fixtures.js', lastEntries));
-        expect(entryFor('oranges/',    entries)).to.eql(entryFor('oranges/', lastEntries));
-        expect(entryFor('types.js',    entries)).to.eql(entryFor('types.js', lastEntries));
-
-        // expected in-stability
-        expect(entryFor('orange.js',     entries)).to.not.eql(entryFor('orange.js', lastEntries));
-        expect(entryFor('orange/two.js', entries)).to.not.eql(entryFor('orange/two.js', lastEntries));
-
-        expect(entries.map(function(entry) { return entry.relativePath; })).to.deep.eql([
-          'fixtures.js',
-          'orange/',
-          'orange/two.js',
-          'orange.js',
-          'types.js'
-        ]);
       });
     });
   });
