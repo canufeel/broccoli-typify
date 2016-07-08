@@ -22,6 +22,16 @@ function entryFor(path, entries) {
   }
 }
 
+/**
+ * compilerSettings that match the most with our use case.
+ */
+var SANE_OPTIONS = {
+  "target": "ES6",
+  "allowJs": true,
+  "noEmitOnError": true,
+  "moduleResolution": "node"
+};
+
 describe('transpile Typescript', function() {
   var builder;
 
@@ -97,10 +107,8 @@ describe('transpile Typescript', function() {
   describe('handles errors', function(){
 
     it('fails when noEmitOnError is set', function(){
-      builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions({
-        "target": "ES6",
-        "noEmitOnError": true
-      }).options}));
+      builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
+      builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
 
       return builder.build().then(function(results) {
         // should not come here
@@ -170,5 +178,23 @@ describe('transpile Typescript', function() {
 
       });
     });
+  });
+
+  describe('imports declarations', function(){
+    it('compiles ember component', function(){
+      builder = new broccoli.Builder(Compiler('tests/fixtures/ember',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
+
+      return builder.build().then(function(results) {
+        var outputPath = results.directory;
+        var entries = walkSync.entries(outputPath);
+        expect(entries).to.have.length(1);
+
+        var output = fs.readFileSync(outputPath + '/ts-component.js', 'UTF8').replace(/\s+/g, ' ');
+        var wanted = fs.readFileSync(expectations + '/ts-component.js', 'UTF8').replace(/\s+/g, ' ');
+
+        expect(output).to.eql(wanted);
+
+      });
+    })
   });
 });

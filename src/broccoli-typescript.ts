@@ -3,6 +3,7 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
+import debug = require('debug');
 import * as ts from 'typescript';
 import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
 
@@ -84,9 +85,17 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     this.tsOpts.rootDir = inputPath;
     this.tsOpts.outDir = this.cachePath;
 
+    if (this.rootFilePaths && this.rootFilePaths.length) {
+      this._debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
+    }
+    this._debug("CustomLanguageServiceHost inputPath " + this.inputPath);
     this.tsServiceHost = new CustomLanguageServiceHost(
         this.tsOpts, this.rootFilePaths, this.fileRegistry, this.inputPath);
     this.tsService = ts.createLanguageService(this.tsServiceHost, ts.createDocumentRegistry());
+  }
+
+  private _debug(message) {
+    debug('broccoli-typify')(`broccoli-typescript ${message}`)
   }
 
 
@@ -294,8 +303,10 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     // TypeScript seems to request lots of bogus paths during import path lookup and resolution,
     // so we we just return undefined when the path is not correct.
 
-    // Ensure it is in the input tree or a lib.d.ts file.
-    if (!startsWith(tsFilePath, this.treeInputPath) && !tsFilePath.match(/\/lib(\..*)*.d\.ts$/)) {
+    // Ensure it is in the input tree, an imported @type files or lib/*d.ts file.
+    if (!startsWith(tsFilePath, this.treeInputPath)
+      && tsFilePath.indexOf('/node_modules/@types/') === -1
+      && !tsFilePath.match(/\/lib(\..*)*.d\.ts$/)) {
       if (fs.existsSync(tsFilePath)) {
         console.log('Rejecting', tsFilePath, '. File is not in the input tree.');
       }
@@ -318,6 +329,22 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
   getDefaultLibFileName(options: ts.CompilerOptions): string {
     // ignore options argument, options should not change during the lifetime of the plugin
     return this.defaultLibFilePath;
+  }
+
+  resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
+    return moduleNames.map(name=>{
+      if (name === 'ember') {
+        return {
+          resolvedFileName: `${this.currentDirectory}/node_modules/@types/ember/index.d.ts`,
+          isExternalLibraryImport: true
+        }
+      } else {
+        console.log(`resolveModuleNames confused by '${name}'`);
+        return <ts.ResolvedModule>{
+          resolvedFileName: undefined
+        }
+      }
+    });
   }
 }
 
