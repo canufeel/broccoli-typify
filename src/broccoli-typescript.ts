@@ -340,9 +340,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
         }
       } else {
         console.log(`resolveModuleNames confused by '${name}'`);
-        return <ts.ResolvedModule>{
-          resolvedFileName: undefined
-        }
+        return undefined;
       }
     });
   }
