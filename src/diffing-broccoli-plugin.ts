@@ -96,7 +96,6 @@ class DiffingPluginWrapper implements BroccoliTree {
 
   rebuild(): (Promise<any>|void) {
     try {
-      debugger;
       let firstRun = !this.initialized;
       this.init();
 

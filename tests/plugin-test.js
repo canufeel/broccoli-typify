@@ -94,6 +94,23 @@ describe('transpile Typescript', function() {
     });
   });
 
+  describe('handles errors', function(){
+
+    it('fails when noEmitOnError is set', function(){
+      builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions({
+        "target": "ES6",
+        "noEmitOnError": true
+      }).options}));
+
+      return builder.build().then(function(results) {
+        // should not come here
+        expect(false).to.be.true();
+      }, function(fail) {
+        expect(fail.message).to.contain('Typescript found the following errors:');
+      });
+    });
+  });
+
   describe('rebuilds', function() {
     var lastEntries, outputPath;
 
