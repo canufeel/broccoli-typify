@@ -37,6 +37,7 @@ const originalEmitFiles: Function = (<any>ts).emitFiles;
 export interface DiffingCompilerOptions {
   tsOptions: ts.CompilerOptions,
   rootFilePaths?: string[],
+  includeExtensions?: string[],
   internalTypings?: boolean
 }
 
@@ -69,6 +70,10 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       this.rootFilePaths = options.rootFilePaths.splice(0);
     } else {
       this.rootFilePaths = [];
+    }
+
+    if (options && options.includeExtensions) {
+      DiffingTSCompiler.includeExtensions = options.includeExtensions;
     }
 
     if (options && options.internalTypings) {
