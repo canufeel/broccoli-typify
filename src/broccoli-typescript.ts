@@ -306,6 +306,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     // Ensure it is in the input tree, an imported @type files or lib/*d.ts file.
     if (!startsWith(tsFilePath, this.treeInputPath)
       && tsFilePath.indexOf('/node_modules/@types/') === -1
+      && tsFilePath.indexOf('/node_modules/at-types') === -1
       && !tsFilePath.match(/\/lib(\..*)*.d\.ts$/)) {
       if (fs.existsSync(tsFilePath)) {
         console.log('Rejecting', tsFilePath, '. File is not in the input tree.');
@@ -334,8 +335,10 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
   resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
     return moduleNames.map(name=>{
       if (name === 'ember') {
+        const first = `${this.currentDirectory}/node_modules/at-types-ember/index.d.ts`,
+          second = `${this.currentDirectory}/node_modules/@types/ember/index.d.ts`;
         return {
-          resolvedFileName: `${this.currentDirectory}/node_modules/@types/ember/index.d.ts`,
+          resolvedFileName: fs.existsSync(first) ? first : second,
           isExternalLibraryImport: true
         }
       } else {
