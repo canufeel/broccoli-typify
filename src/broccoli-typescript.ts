@@ -339,7 +339,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
           isExternalLibraryImport: true
         }
       } else {
-        console.log(`resolveModuleNames confused by '${name}'`);
+        debug('broccoli-typify')(`resolveModuleNames skipping module '${name}'`);
         return undefined;
       }
     });
