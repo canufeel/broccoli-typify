@@ -4,3 +4,4 @@ fixtures/tmp/
 dist
 .idea
 *.iml
+npm-debug.log
