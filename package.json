@@ -1,6 +1,6 @@
 {
   "name": "broccoli-typify",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "description": "Provide broccoli building blocks for typescript pipelines.",
   "main": "dist/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "javascript",
     "js"
   ],
-  "bin" : "bin/cli.js",
+  "bin" : "bin/broccoli-typify.js",
   "typings": "./dist/index.d.ts",
   "author": "Marius Seritan <git@winding-lines.com>",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "@types/debug": "0.0.26-alpha",
     "@types/fs-extra": "0.0.22-alpha",
     "@types/node": "^4.0.22-alpha",
-    "at-types-ember": "2.0.0-dev2",
+    "at-types-ember": "^2.0.0-dev3",
     "broccoli": "^0.16.3",
     "broccoli-test-helpers": "0.0.8",
     "chai": "^1.10.0",
