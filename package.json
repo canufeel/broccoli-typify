@@ -1,6 +1,6 @@
 {
   "name": "broccoli-typify",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Provide broccoli building blocks for typescript pipelines.",
   "main": "dist/index.js",
   "scripts": {
@@ -20,6 +20,8 @@
     "javascript",
     "js"
   ],
+  "bin" : "bin/cli.js",
+  "typings": "./dist/index.d.ts",
   "author": "Marius Seritan <git@winding-lines.com>",
   "license": "MIT",
   "bugs": {
@@ -27,6 +29,7 @@
   },
   "homepage": "https://github.com/winding-lines/broccoli-typify#readme",
   "dependencies": {
+    "broccoli": "^0.16.3",
     "broccoli-funnel": "^1.0.2",
     "broccoli-merge-trees": "^1.1.1",
     "broccoli-persistent-filter": "^1.0.1",
