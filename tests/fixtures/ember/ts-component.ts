@@ -1,7 +1,9 @@
 
 import Ember from 'ember';
+import * as D3 from 'npm:d3';
 
 function compute() : {value:string} {
+  D3.select(this.get('element'));
   return {value: 'from component'};
 }
 

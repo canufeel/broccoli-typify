@@ -342,14 +342,29 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
       if (name === 'ember') {
         const first = `${this.currentDirectory}/node_modules/at-types-ember/index.d.ts`,
           second = `${this.currentDirectory}/node_modules/@types/ember/index.d.ts`;
-        return {
-          resolvedFileName: fs.existsSync(first) ? first : second,
-          isExternalLibraryImport: true
+        if (fs.existsSync(first)) {
+          return {
+            resolvedFileName: first,
+            isExternalLibraryImport: true
+          }
         }
-      } else {
-        debug('broccoli-typify')(`resolveModuleNames skipping module '${name}'`);
-        return undefined;
+        if (fs.existsSync(second)) {
+          return {
+            resolvedFileName: second,
+            isExternalLibraryImport: true
+          }
+        }
+      } else if (name.indexOf('npm:')===0) {
+        const module = name.split(':')[1], path = `${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`;
+        if (fs.existsSync(path)) {
+          return {
+            resolvedFileName: path,
+            isExternalLibraryImport: true
+          }
+        }
       }
+      debug('broccoli-typify')(`resolveModuleNames skipping module '${name}'`);
+      return undefined;
     });
   }
 }

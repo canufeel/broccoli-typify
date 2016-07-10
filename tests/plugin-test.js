@@ -69,7 +69,7 @@ describe('transpile Typescript', function() {
 
 
   describe('tsOptions', function() {
-
+    this.timeout(10000);
     it('uses tsOptions', function () {
       builder = new broccoli.Builder(Compiler('tests/fixtures/files',  {tsOptions: toTypescriptOptions({
             "target": "ES6"
@@ -105,6 +105,7 @@ describe('transpile Typescript', function() {
   });
 
   describe('handles errors', function(){
+    this.timeout(10000);
 
     it('fails when noEmitOnError is set', function(){
       builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
@@ -120,6 +121,8 @@ describe('transpile Typescript', function() {
   });
 
   describe('rebuilds', function() {
+    this.timeout(10000);
+
     var lastEntries, outputPath;
 
     beforeEach(function() {
@@ -181,6 +184,8 @@ describe('transpile Typescript', function() {
   });
 
   describe('imports declarations', function(){
+    this.timeout(10000);
+
     it('compiles ember component', function(){
       builder = new broccoli.Builder(Compiler('tests/fixtures/ember',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
 

@@ -1,6 +1,6 @@
 {
   "name": "broccoli-typify",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Provide broccoli building blocks for typescript pipelines.",
   "main": "dist/index.js",
   "scripts": {
@@ -38,10 +38,11 @@
     "typescript": "^2.0.0-dev.20160706"
   },
   "devDependencies": {
+    "@types/d3": "0.0.27-alpha",
     "@types/debug": "0.0.26-alpha",
-    "at-types-ember": "2.0.0-dev2",
     "@types/fs-extra": "0.0.22-alpha",
     "@types/node": "^4.0.22-alpha",
+    "at-types-ember": "2.0.0-dev2",
     "broccoli": "^0.16.3",
     "broccoli-test-helpers": "0.0.8",
     "chai": "^1.10.0",
