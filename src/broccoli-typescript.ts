@@ -320,6 +320,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     if (!startsWith(tsFilePath, this.treeInputPath)
       && tsFilePath.indexOf('/node_modules/@types/') === -1
       && tsFilePath.indexOf('/node_modules/at-types') === -1
+      && tsFilePath.indexOf('/local-types/') === -1
       && !tsFilePath.match(/\/lib(\..*)*.d\.ts$/)) {
       if (fs.existsSync(tsFilePath)) {
         console.log('Rejecting', tsFilePath, '. File is not in the input tree.');
