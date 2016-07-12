@@ -370,12 +370,18 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
           }
         }
       } else if (name.indexOf('npm:')===0) {
-        // resolve npm: modules as loaded with ember-browserify
-        const module = name.split(':')[1], path = `${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`;
-        if (fs.existsSync(path)) {
-          return {
-            resolvedFileName: path,
-            isExternalLibraryImport: true
+        // resolve npm: modules as loaded with ember-browserify.
+        // the end goal is to have all the types coming from npm @types,
+        // however we support a local-types for development.
+        const module = name.split(':')[1], paths = [
+          `${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`,
+          `${this.currentDirectory}/local-types/${module}/index.d.ts`];
+        for( let i=0; i<paths.length; i++) {
+          if (fs.existsSync(paths[i])) {
+            return {
+              resolvedFileName: paths[i],
+              isExternalLibraryImport: true
+            }
           }
         }
       }
