@@ -277,6 +277,14 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
   }
 }
 
+function fileExists(fileName: string): boolean {
+        return ts.sys.fileExists(fileName);
+    }
+
+    function readFile(fileName: string): string {
+        return ts.sys.readFile(fileName);
+    }
+
 
 class CustomLanguageServiceHost implements ts.LanguageServiceHost {
   private currentDirectory: string;
@@ -339,7 +347,14 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
 
   resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
     return moduleNames.map(name=>{
+      // first try the default resolution
+      let result = ts.resolveModuleName(name, containingFile, this.compilerOptions, {fileExists, readFile});
+      if (result.resolvedModule) {
+          return result.resolvedModule;
+      }
+
       if (name === 'ember') {
+        // custom ember resolution while we stabilize the type definition
         const first = `${this.currentDirectory}/node_modules/at-types-ember/index.d.ts`,
           second = `${this.currentDirectory}/node_modules/@types/ember/index.d.ts`;
         if (fs.existsSync(first)) {
@@ -355,6 +370,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
           }
         }
       } else if (name.indexOf('npm:')===0) {
+        // resolve npm: modules as loaded with ember-browserify
         const module = name.split(':')[1], path = `${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`;
         if (fs.existsSync(path)) {
           return {
