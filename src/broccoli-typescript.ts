@@ -36,6 +36,7 @@ const originalEmitFiles: Function = (<any>ts).emitFiles;
 
 export interface DiffingCompilerOptions {
   tsOptions: ts.CompilerOptions,
+  localTypesFolder?: string,
   rootFilePaths?: string[],
   includeExtensions?: string[],
   internalTypings?: boolean
@@ -94,8 +95,13 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       this._debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
     }
     this._debug("CustomLanguageServiceHost inputPath " + this.inputPath);
+    let localTypesFolder = options.localTypesFolder || `${process.cwd()}/local-types`;
     this.tsServiceHost = new CustomLanguageServiceHost(
-        this.tsOpts, this.rootFilePaths, this.fileRegistry, this.inputPath);
+        this.tsOpts,
+        this.rootFilePaths,
+        this.fileRegistry,
+        this.inputPath,
+        localTypesFolder);
     this.tsService = ts.createLanguageService(this.tsServiceHost, ts.createDocumentRegistry());
   }
 
@@ -292,8 +298,11 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
 
 
   constructor(
-      private compilerOptions: ts.CompilerOptions, private fileNames: string[],
-      private fileRegistry: FileRegistry, private treeInputPath: string) {
+      private compilerOptions: ts.CompilerOptions,
+      private fileNames: string[],
+      private fileRegistry: FileRegistry,
+      private treeInputPath: string,
+      private localTypesFolder: string) {
     this.currentDirectory = process.cwd();
     this.defaultLibFilePath = ts.getDefaultLibFilePath(compilerOptions).replace(/\\/g, '/');
   }
@@ -320,7 +329,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     if (!startsWith(tsFilePath, this.treeInputPath)
       && tsFilePath.indexOf('/node_modules/@types/') === -1
       && tsFilePath.indexOf('/node_modules/at-types') === -1
-      && tsFilePath.indexOf('/local-types/') === -1
+      && tsFilePath.indexOf(this.localTypesFolder) === -1
       && !tsFilePath.match(/\/lib(\..*)*.d\.ts$/)) {
       if (fs.existsSync(tsFilePath)) {
         console.log('Rejecting', tsFilePath, '. File is not in the input tree.');
@@ -370,13 +379,19 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
             isExternalLibraryImport: true
           }
         }
+      } else if (name.match(/\/config\/environment$/)) {
+        // magical ember import, need to move this in the ember-cli-typify
+        return {
+          resolvedFileName: `${this.localTypesFolder}/ember-config-environment.d.ts`,
+          isExternalLibraryImport: true
+        }
       } else if (name.indexOf('npm:')===0) {
         // resolve npm: modules as loaded with ember-browserify.
         // the end goal is to have all the types coming from npm @types,
         // however we support a local-types for development.
         const module = name.split(':')[1], paths = [
           `${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`,
-          `${this.currentDirectory}/local-types/${module}/index.d.ts`];
+          `${this.localTypesFolder}/${module}/index.d.ts`];
         for( let i=0; i<paths.length; i++) {
           if (fs.existsSync(paths[i])) {
             return {
