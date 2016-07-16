@@ -3,7 +3,7 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
-import debug = require('debug');
+import debugImport = require('debug');
 import * as ts from 'typescript';
 import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
 
@@ -12,6 +12,8 @@ type FileRegistry = ts.Map<{version: number}>;
 const FS_OPTS = {
   encoding: 'utf-8'
 };
+
+var debug = debugImport('broccoli-typify:typescript')
 
 // Sub-directory where the @internal typing files (.d.ts) are stored
 export const INTERNAL_TYPINGS_PATH: string = 'internal_typings';
@@ -92,9 +94,9 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     this.tsOpts.outDir = this.cachePath;
 
     if (this.rootFilePaths && this.rootFilePaths.length) {
-      this._debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
+      debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
     }
-    this._debug("CustomLanguageServiceHost inputPath " + this.inputPath);
+    debug("CustomLanguageServiceHost inputPath " + this.inputPath);
     let localTypesFolder = options.localTypesFolder || `${process.cwd()}/local-types`;
     this.tsServiceHost = new CustomLanguageServiceHost(
         this.tsOpts,
@@ -103,10 +105,6 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
         this.inputPath,
         localTypesFolder);
     this.tsService = ts.createLanguageService(this.tsServiceHost, ts.createDocumentRegistry());
-  }
-
-  private _debug(message) {
-    debug('broccoli-typify')(`broccoli-typescript ${message}`)
   }
 
 
@@ -386,7 +384,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
           }
         }
       }
-      debug('broccoli-typify')(`resolveModuleNames skipping module '${name}'`);
+      debug(`resolveModuleNames skipping module '${name}'`);
       return undefined;
     });
   }

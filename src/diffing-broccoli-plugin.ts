@@ -3,7 +3,7 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
-import debug = require('debug');
+import debugImport = require('debug');
 import {TreeDiffer, DiffResult} from './tree-differ';
 import stabilizeTree from './broccoli-tree-stabilizer';
 let symlinkOrCopy = require('symlink-or-copy');
@@ -11,6 +11,8 @@ let symlinkOrCopy = require('symlink-or-copy');
 export {DiffResult} from './tree-differ';
 
 export type PluginClass = any;
+
+var debug = debugImport(`broccoli-typify:diffing`)
 
 /**
  * Makes writing diffing plugins easy.
@@ -33,6 +35,7 @@ export type DiffingPluginWrapperFactory =
     (inputTrees: (BroccoliTree | BroccoliTree[]), options?: any) => BroccoliTree;
 
 
+
 class DiffingPluginWrapper implements BroccoliTree {
   treeDiffer: TreeDiffer = null;
   treeDiffers: TreeDiffer[] = null;
@@ -51,10 +54,13 @@ class DiffingPluginWrapper implements BroccoliTree {
   private diffResult: DiffResult = null;
 
   constructor(private pluginClass: PluginClass, private wrappedPluginArguments: IArguments) {
-    if (Array.isArray(wrappedPluginArguments[0])) {
-      this.inputTrees = this.stabilizeTrees(wrappedPluginArguments[0]);
+    let firstArg = wrappedPluginArguments[0];
+    if (Array.isArray(firstArg)) {
+      debug(`Constructor ${firstArg.length} input trees, first ${firstArg[0]}`);
+      this.inputTrees = this.stabilizeTrees(firstArg);
     } else {
       this.inputTree = this.stabilizeTree(wrappedPluginArguments[0]);
+      debug(`Constructor one input tree ${firstArg}, stabilized ${this.inputTree.constructor['name']}`);
     }
 
     this.description = (<any>this.pluginClass).name;
@@ -90,9 +96,6 @@ class DiffingPluginWrapper implements BroccoliTree {
     this.diffResult = <DiffResult>(value);
   }
 
-  private _debug(message) {
-    debug(`broccoli-typify`)(`${this.description}: ${message}`);
-  }
 
   rebuild(): (Promise<any>|void) {
     try {
@@ -102,7 +105,7 @@ class DiffingPluginWrapper implements BroccoliTree {
       let diffResult = this.getDiffResult();
       let firstDiff = (diffResult instanceof DiffResult) ? diffResult : diffResult[0];
       if (firstDiff) {
-        this._debug(`diff Result added ${firstDiff.addedPaths.length}, removed ${firstDiff.removedPaths.length}`);
+        debug(`rebuild diffResult files added ${firstDiff.addedPaths.length}, removed ${firstDiff.removedPaths.length}`);
       }
 
       let result = this.wrappedPlugin.rebuild(diffResult);
@@ -122,7 +125,7 @@ class DiffingPluginWrapper implements BroccoliTree {
       this.relinkOutputAndCachePaths();
     } catch (e) {
       e.message = `[${this.description}]: ${e.message}`;
-      this._debug(`exception in rebuild(): ${e.message}`);
+      debug(`exception in rebuild(): ${e.message}`);
       throw e;
     }
   }
@@ -190,7 +193,7 @@ class DiffingPluginWrapper implements BroccoliTree {
     let isNewStyleTree =
         !!(tree['newStyleTree'] || typeof tree.rebuild === 'function' ||
            (<any>tree)['isReadAPICompatTree'] || (<any>tree).constructor['name'] === 'Funnel');
-
+    debug(`stabilize tree isNewStyleTree ${isNewStyleTree} ${tree.toString()}`);
     return isNewStyleTree ? tree : stabilizeTree(tree);
   }
 }

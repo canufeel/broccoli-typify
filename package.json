@@ -1,6 +1,6 @@
 {
   "name": "broccoli-typify",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Provide broccoli building blocks for typescript pipelines.",
   "main": "dist/index.js",
   "scripts": {
