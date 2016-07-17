@@ -13,7 +13,9 @@ const FS_OPTS = {
   encoding: 'utf-8'
 };
 
-var debug = debugImport('broccoli-typify:typescript')
+var debug = debugImport('broccoli-typify:typescript');
+
+var compilerInstance = 0;
 
 export interface DiffingCompilerOptions {
   tsOptions: ts.CompilerOptions,
@@ -60,11 +62,11 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       DiffingTSCompiler.includeExtensions = options.includeExtensions;
     }
 
-    this.tsOpts = (options && options.tsOptions) || {};
+    this.tsOpts = (options && clone(options.tsOptions)) || {};
 
     this.tsOpts.rootDir = inputPath;
     this.tsOpts.outDir = this.cachePath;
-    this.instanceName = this.options.instanceName;
+    this.instanceName = this.options.instanceName + ':' + (compilerInstance++);
 
     if (this.rootFilePaths && this.rootFilePaths.length) {
       debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
@@ -87,6 +89,8 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     let pathsWithErrors: string[] = [];
     let errorMessages: string[] = [];
 
+    this.debugWithName(`entering build, firstRun: ${this.firstRun}`);
+
     treeDiff.addedPaths.concat(treeDiff.changedPaths).forEach((tsFilePath) => {
       if (!this.fileRegistry[tsFilePath]) {
         this.fileRegistry[tsFilePath] = { version: 0 };
@@ -99,7 +103,6 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     });
 
     treeDiff.removedPaths.forEach((tsFilePath) => {
-      console.log('removing outputs for', tsFilePath);
 
       this.rootFilePaths.splice(this.rootFilePaths.indexOf(tsFilePath), 1);
       this.fileRegistry[tsFilePath] = null;
@@ -174,15 +177,6 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     let emitResult = program.emit(undefined, (absoluteFilePath, fileContent) => {
       fse.mkdirsSync(path.dirname(absoluteFilePath));
       fs.writeFileSync(absoluteFilePath, fileContent, FS_OPTS);
-      if (endsWith(absoluteFilePath, '.d.ts')) {
-        // TODO: Use sourceFile from the callback if
-        //   https://github.com/Microsoft/TypeScript/issues/7438
-        // is taken
-        const originalFile = absoluteFilePath.replace(this.tsOpts.outDir, this.tsOpts.rootDir)
-          .replace(/\.d\.ts$/, '.ts');
-        const sourceFile = program.getSourceFile(originalFile);
-
-      }
     });
     if (emitResult.emitSkipped) {
       let allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
