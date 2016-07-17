@@ -5,9 +5,9 @@ import fse = require('fs-extra');
 import path = require('path');
 import debugImport = require('debug');
 import * as ts from 'typescript';
-import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
+import { wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult } from './diffing-broccoli-plugin';
 
-type FileRegistry = ts.Map<{version: number}>;
+type FileRegistry = ts.Map<{ version: number }>;
 
 const FS_OPTS = {
   encoding: 'utf-8'
@@ -15,33 +15,12 @@ const FS_OPTS = {
 
 var debug = debugImport('broccoli-typify:typescript')
 
-// Sub-directory where the @internal typing files (.d.ts) are stored
-export const INTERNAL_TYPINGS_PATH: string = 'internal_typings';
-
-// Monkey patch the TS compiler to be able to re-emit files with @internal symbols
-let tsEmitInternal: boolean = false;
-
-const originalEmitFiles: Function = (<any>ts).emitFiles;
-
-(<any>ts).emitFiles = function(resolver: any, host: any, targetSourceFile: any): any {
-  if (tsEmitInternal) {
-    const orignalgetCompilerOptions = host.getCompilerOptions;
-    host.getCompilerOptions = () => {
-      let options = clone(orignalgetCompilerOptions.call(host));
-      options.stripInternal = false;
-      options.outDir = `${options.outDir}/${INTERNAL_TYPINGS_PATH}`;
-      return options;
-    }
-  }
-  return originalEmitFiles(resolver, host, targetSourceFile);
-};
-
 export interface DiffingCompilerOptions {
   tsOptions: ts.CompilerOptions,
   localTypesFolder?: string,
   rootFilePaths?: string[],
   includeExtensions?: string[],
-  internalTypings?: boolean
+  instanceName?: string
 }
 
 /**
@@ -62,13 +41,15 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
   private tsService: ts.LanguageService;
   private firstRun: boolean = true;
   private previousRunFailed: boolean = false;
-  // Whether to generate the @internal typing files (they are only generated when `stripInternal` is
-  // true)
-  private genInternalTypings: boolean = false;
+  private instanceName: string;
 
-  static includeExtensions = ['.ts','.js'];
+  static includeExtensions = ['.ts', '.js'];
 
-  constructor(public inputPath: string, public cachePath: string, public options?: DiffingCompilerOptions ) {
+  private debugWithName(msg: string) {
+    debug(`[name ${this.instanceName}] ${msg}`);
+  }
+
+  constructor(public inputPath: string, public cachePath: string, public options?: DiffingCompilerOptions) {
     if (options && options.rootFilePaths) {
       this.rootFilePaths = options.rootFilePaths.splice(0);
     } else {
@@ -79,31 +60,24 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       DiffingTSCompiler.includeExtensions = options.includeExtensions;
     }
 
-    if (options && options.internalTypings) {
-      this.genInternalTypings = true;
-    }
-
     this.tsOpts = (options && options.tsOptions) || {};
-
-    if ((<any>this.tsOpts).stripInternal === false) {
-      // @internal are included in the generated .d.ts, do not generate them separately
-      this.genInternalTypings = false;
-    }
 
     this.tsOpts.rootDir = inputPath;
     this.tsOpts.outDir = this.cachePath;
+    this.instanceName = this.options.instanceName;
 
     if (this.rootFilePaths && this.rootFilePaths.length) {
       debug("CustomLanguageServiceHost rootFilePaths " + this.rootFilePaths.join(";"));
     }
-    debug("CustomLanguageServiceHost inputPath " + this.inputPath);
+    debug(`[name ${this.instanceName}] CustomLanguageServiceHost inputPath ${this.inputPath}`);
     let localTypesFolder = options.localTypesFolder || `${process.cwd()}/local-types`;
     this.tsServiceHost = new CustomLanguageServiceHost(
-        this.tsOpts,
-        this.rootFilePaths,
-        this.fileRegistry,
-        this.inputPath,
-        localTypesFolder);
+      this.tsOpts,
+      this.rootFilePaths,
+      this.fileRegistry,
+      this.inputPath,
+      localTypesFolder,
+      this.instanceName);
     this.tsService = ts.createLanguageService(this.tsServiceHost, ts.createDocumentRegistry());
   }
 
@@ -115,7 +89,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
 
     treeDiff.addedPaths.concat(treeDiff.changedPaths).forEach((tsFilePath) => {
       if (!this.fileRegistry[tsFilePath]) {
-        this.fileRegistry[tsFilePath] = {version: 0};
+        this.fileRegistry[tsFilePath] = { version: 0 };
         this.rootFilePaths.push(tsFilePath);
       } else {
         this.fileRegistry[tsFilePath].version++;
@@ -137,11 +111,11 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       this.doFullBuild();
     } else {
       let program = this.tsService.getProgram();
-      tsEmitInternal = false;
       pathsToEmit.forEach((tsFilePath) => {
         let output = this.tsService.getEmitOutput(tsFilePath);
 
-        if (output.emitSkipped) {
+         if (output.emitSkipped) {
+          // there was an error, report it
           let errorFound = this.collectErrors(tsFilePath);
           if (errorFound) {
             pathsWithErrors.push(tsFilePath);
@@ -162,35 +136,19 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       if (pathsWithErrors.length) {
         this.previousRunFailed = true;
         var error =
-            new Error('Typescript found the following errors:\n' + errorMessages.join('\n'));
+          new Error(`[name ${this.instanceName}] Typescript found the following errors:\n` + errorMessages.join('\n'));
         (<any>error)['showStack'] = false;
         throw error;
       } else if (this.previousRunFailed) {
         this.doFullBuild();
-      } else if (this.genInternalTypings) {
-        // serialize the .d.ts files containing @internal symbols
-        tsEmitInternal = true;
-        pathsToEmit.forEach((tsFilePath) => {
-          let output = this.tsService.getEmitOutput(tsFilePath);
-          if (!output.emitSkipped) {
-            output.outputFiles.forEach(o => {
-              if (endsWith(o.name, '.d.ts')) {
-                let destDirPath = path.dirname(o.name);
-                fse.mkdirsSync(destDirPath);
-                fs.writeFileSync(o.name, o.text, FS_OPTS);
-              }
-            });
-          }
-        });
-        tsEmitInternal = false;
       }
     }
   }
 
   private collectErrors(tsFilePath: string): string {
     let allDiagnostics = this.tsService.getCompilerOptionsDiagnostics()
-                             .concat(this.tsService.getSyntacticDiagnostics(tsFilePath))
-                             .concat(this.tsService.getSemanticDiagnostics(tsFilePath));
+      .concat(this.tsService.getSyntacticDiagnostics(tsFilePath))
+      .concat(this.tsService.getSemanticDiagnostics(tsFilePath));
     let errors: string[] = [];
 
     allDiagnostics.forEach(diagnostic => {
@@ -212,7 +170,6 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
     let program = this.tsService.getProgram();
     let typeChecker = program.getTypeChecker();
     let diagnostics: ts.Diagnostic[] = [];
-    tsEmitInternal = false;
 
     let emitResult = program.emit(undefined, (absoluteFilePath, fileContent) => {
       fse.mkdirsSync(path.dirname(absoluteFilePath));
@@ -222,23 +179,11 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
         //   https://github.com/Microsoft/TypeScript/issues/7438
         // is taken
         const originalFile = absoluteFilePath.replace(this.tsOpts.outDir, this.tsOpts.rootDir)
-                                 .replace(/\.d\.ts$/, '.ts');
+          .replace(/\.d\.ts$/, '.ts');
         const sourceFile = program.getSourceFile(originalFile);
+
       }
     });
-
-    if (this.genInternalTypings) {
-      // serialize the .d.ts files containing @internal symbols
-      tsEmitInternal = true;
-      program.emit(undefined, (absoluteFilePath, fileContent) => {
-        if (endsWith(absoluteFilePath, '.d.ts')) {
-          fse.mkdirsSync(path.dirname(absoluteFilePath));
-          fs.writeFileSync(absoluteFilePath, fileContent, FS_OPTS);
-        }
-      });
-      tsEmitInternal = false;
-    }
-
     if (emitResult.emitSkipped) {
       let allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
       let errorMessages: string[] = [];
@@ -256,7 +201,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       if (errorMessages.length) {
         this.previousRunFailed = true;
         var error =
-            new Error('Typescript found the following errors:\n' + errorMessages.join('\n'));
+            new Error(`[name ${this.instanceName}] Typescript found the following errors:\n` + errorMessages.join('\n'));
         (<any>error)['showStack'] = false;
         throw error;
       } else {
@@ -282,12 +227,12 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
 }
 
 function fileExists(fileName: string): boolean {
-        return ts.sys.fileExists(fileName);
-    }
+  return ts.sys.fileExists(fileName);
+}
 
-    function readFile(fileName: string): string {
-        return ts.sys.readFile(fileName);
-    }
+function readFile(fileName: string): string {
+  return ts.sys.readFile(fileName);
+}
 
 
 class CustomLanguageServiceHost implements ts.LanguageServiceHost {
@@ -296,11 +241,13 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
 
 
   constructor(
-      private compilerOptions: ts.CompilerOptions,
-      private fileNames: string[],
-      private fileRegistry: FileRegistry,
-      private treeInputPath: string,
-      private localTypesFolder: string) {
+    private compilerOptions: ts.CompilerOptions,
+    private fileNames: string[],
+    private fileRegistry: FileRegistry,
+    private treeInputPath: string,
+    private localTypesFolder: string,
+    private instanceName: string
+    ) {
     this.currentDirectory = process.cwd();
     this.defaultLibFilePath = ts.getDefaultLibFilePath(compilerOptions).replace(/\\/g, '/');
   }
@@ -354,11 +301,11 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
   }
 
   resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
-    return moduleNames.map(name=>{
+    return moduleNames.map(name => {
       // first try the default resolution
-      let result = ts.resolveModuleName(name, containingFile, this.compilerOptions, {fileExists, readFile});
+      let result = ts.resolveModuleName(name, containingFile, this.compilerOptions, { fileExists, readFile });
       if (result.resolvedModule) {
-          return result.resolvedModule;
+        return result.resolvedModule;
       }
       let candidatePaths: string[] = [];
 
@@ -372,11 +319,11 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
         // resolve npm: modules as loaded with ember-browserify.
         // the end goal is to have all the types coming from npm @types,
         // however we support a local-types for development.
-        const module = (name.indexOf('npm:')===0) ? name.split(':')[1] : name;
+        const module = (name.indexOf('npm:') === 0) ? name.split(':')[1] : name;
         candidatePaths.push(`${this.localTypesFolder}/${module}/index.d.ts`);
         candidatePaths.push(`${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`);
       }
-      for( let i=0; i<candidatePaths.length; i++) {
+      for (let i = 0; i < candidatePaths.length; i++) {
         if (fs.existsSync(candidatePaths[i])) {
           return {
             resolvedFileName: candidatePaths[i],
@@ -384,7 +331,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
           }
         }
       }
-      debug(`resolveModuleNames skipping module '${name}'`);
+      (`[name ${this.instanceName}] resolveModuleNames skipping module '${name}'`);
       return undefined;
     });
   }

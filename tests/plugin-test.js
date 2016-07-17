@@ -14,14 +14,6 @@ var toTypescriptOptions =Typify.toTypescriptOptions;
 
 var expectations = __dirname + '/expectations';
 
-function entryFor(path, entries) {
-  for (var i = 0; i < entries.length; i++) {
-    if (entries[i].relativePath === path) {
-      return entries[i];
-    }
-  }
-}
-
 /**
  * compilerSettings that match the most with our use case.
  */
@@ -108,7 +100,6 @@ describe('transpile Typescript', function() {
     this.timeout(10000);
 
     it('fails when noEmitOnError is set', function(){
-      builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
       builder = new broccoli.Builder(Compiler('tests/fixtures/buggy',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
 
       return builder.build().then(function(results) {
