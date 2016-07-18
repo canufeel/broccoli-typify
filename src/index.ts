@@ -2,7 +2,7 @@
 'use strict';
 
 import debugImport = require('debug');
-import {Compiler as BroccoliCompiler, DiffingCompilerOptions} from './broccoli-typescript';
+import { Compiler as BroccoliCompiler, DiffingCompilerOptions } from './broccoli-typescript';
 import * as ts from 'typescript';
 import findConfig from './find-config';
 import fs = require('fs');
@@ -14,24 +14,24 @@ let debug = debugImport('broccoli-typify:main');
  * The rationale for making this available separately is to be able to handle errors
  * in the configuration data.
  */
-export function toTypescriptOptions(options:any, basePath:string):{
-  options:ts.CompilerOptions;
-  errors:ts.Diagnostic[];
+export function toTypescriptOptions(options: any, basePath: string): {
+  options: ts.CompilerOptions;
+  errors: ts.Diagnostic[];
 } {
 
   return ts.convertCompilerOptionsFromJson(options, basePath);
 }
 
 export interface LoadedOptions {
-  options:ts.CompilerOptions;
-  errors:ts.Diagnostic[];
+  options: ts.CompilerOptions;
+  errors: ts.Diagnostic[];
 }
 
 /**
  * Load the given tsconfig.json file.
  */
 
-function loadTsconfig(tsconfigPath:string):LoadedOptions {
+function loadTsconfig(tsconfigPath: string): LoadedOptions {
   if (tsconfigPath) {
     var content = JSON.parse(fs.readFileSync(tsconfigPath).toString('utf8'));
     return ts.convertCompilerOptionsFromJson(content['compilerOptions'], tsconfigPath);
@@ -51,7 +51,7 @@ function loadTsconfig(tsconfigPath:string):LoadedOptions {
 /**
  * Load the configuration from the tsconfig.json file for the consuming project.
  */
-export function loadProjectTsconfig(root:string): LoadedOptions {
+export function loadProjectTsconfig(root: string): LoadedOptions {
   const path = findConfig(root);
   return loadTsconfig(path);
 }
@@ -63,13 +63,12 @@ export interface CompilerOptions extends DiffingCompilerOptions {
 export function Compiler(tree: BroccoliTree, options?: CompilerOptions): any {
   let resolvedOptions = options;
   if (!options || options.tsconfig) {
-    var loaded = (options && options.tsconfig) ? loadTsconfig(options.tsconfig): loadProjectTsconfig(__dirname);
+    var loaded = (options && options.tsconfig) ? loadTsconfig(options.tsconfig) : loadProjectTsconfig(__dirname);
     if (loaded.errors.length) {
       throw "Errors loading tsconfig " + loaded.errors.join("\n");
     }
-    resolvedOptions = { tsOptions: loaded.options};
+    resolvedOptions = { tsOptions: loaded.options };
   }
   debug(`Initializing compiler with ${JSON.stringify(resolvedOptions)}`);
   return BroccoliCompiler(tree, resolvedOptions);
 }
-

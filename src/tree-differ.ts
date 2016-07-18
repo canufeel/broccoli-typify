@@ -15,15 +15,15 @@ function tryStatSync(path: string) {
 
 
 export class TreeDiffer {
-  private fingerprints: {[key: string]: string} = Object.create(null);
-  private nextFingerprints: {[key: string]: string} = Object.create(null);
+  private fingerprints: { [key: string]: string } = Object.create(null);
+  private nextFingerprints: { [key: string]: string } = Object.create(null);
   private rootDirName: string;
   private include: RegExp = null;
   private exclude: RegExp = null;
 
   constructor(
-      private label: string, private rootPath: string, includeExtensions?: string[],
-      excludeExtensions?: string[]) {
+    private label: string, private rootPath: string, includeExtensions?: string[],
+    excludeExtensions?: string[]) {
     this.rootDirName = path.basename(rootPath);
 
     let buildRegexp = (arr: string[]) => new RegExp(`(${arr.reduce(combine, "")})$`, 'i');
@@ -65,7 +65,7 @@ export class TreeDiffer {
         this.dirtyCheckPath(absolutePath, result);
       } else {
         if (!(this.include && !absolutePath.match(this.include)) &&
-            !(this.exclude && absolutePath.match(this.exclude))) {
+          !(this.exclude && absolutePath.match(this.exclude))) {
           result.filesChecked++;
           let relativeFilePath = path.relative(this.rootPath, absolutePath);
 
@@ -108,7 +108,7 @@ export class TreeDiffer {
   private detectDeletionsAndUpdateFingerprints(result: DiffResult) {
     for (let absolutePath in this.fingerprints) {
       if (!(this.include && !absolutePath.match(this.include)) &&
-          !(this.exclude && absolutePath.match(this.exclude))) {
+        !(this.exclude && absolutePath.match(this.exclude))) {
         if (this.fingerprints[absolutePath] !== null) {
           let relativePath = path.relative(this.rootPath, absolutePath);
           result.removedPaths.push(relativePath);
@@ -127,9 +127,9 @@ export class DiffResult {
   public changedPaths: string[] = [];
   public removedPaths: string[] = [];
 
-  constructor(public label: string = '') {}
+  constructor(public label: string = '') { }
 
-  log(verbose: boolean): void {}
+  log(verbose: boolean): void { }
 
   toString(): string {
     // TODO(@caitp): more meaningful logging
@@ -147,17 +147,17 @@ class DirtyCheckingDiffResult extends DiffResult {
 
   toString() {
     return `${pad(this.label, 30)}, ${pad(this.endTime - this.startTime, 5)}ms, ` +
-        `${pad(this.addedPaths.length + this.changedPaths.length + this.removedPaths.length, 5)} changes ` +
-        `(files: ${pad(this.filesChecked, 5)}, dirs: ${pad(this.directoriesChecked, 4)})`;
+      `${pad(this.addedPaths.length + this.changedPaths.length + this.removedPaths.length, 5)} changes ` +
+      `(files: ${pad(this.filesChecked, 5)}, dirs: ${pad(this.directoriesChecked, 4)})`;
   }
 
   log(verbose: boolean) {
     let prefixedPaths = this.addedPaths.map(p => `+ ${p}`)
-                            .concat(this.changedPaths.map(p => `* ${p}`))
-                            .concat(this.removedPaths.map(p => `- ${p}`));
+      .concat(this.changedPaths.map(p => `* ${p}`))
+      .concat(this.removedPaths.map(p => `- ${p}`));
     console.log(
-        `Tree diff: ${this}` +
-        ((verbose && prefixedPaths.length) ? ` [\n  ${prefixedPaths.join('\n  ')}\n]` : ''));
+      `Tree diff: ${this}` +
+      ((verbose && prefixedPaths.length) ? ` [\n  ${prefixedPaths.join('\n  ')}\n]` : ''));
   }
 }
 

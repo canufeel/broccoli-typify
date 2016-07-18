@@ -117,7 +117,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       pathsToEmit.forEach((tsFilePath) => {
         let output = this.tsService.getEmitOutput(tsFilePath);
 
-         if (output.emitSkipped) {
+        if (output.emitSkipped) {
           // there was an error, report it
           let errorFound = this.collectErrors(tsFilePath);
           if (errorFound) {
@@ -195,7 +195,7 @@ class DiffingTSCompiler implements DiffingBroccoliPlugin {
       if (errorMessages.length) {
         this.previousRunFailed = true;
         var error =
-            new Error(`[name ${this.instanceName}] Typescript found the following errors:\n` + errorMessages.join('\n'));
+          new Error(`[name ${this.instanceName}] Typescript found the following errors:\n` + errorMessages.join('\n'));
         (<any>error)['showStack'] = false;
         throw error;
       } else {
@@ -241,7 +241,7 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     private treeInputPath: string,
     private localTypesFolder: string,
     private instanceName: string
-    ) {
+  ) {
     this.currentDirectory = process.cwd();
     this.defaultLibFilePath = ts.getDefaultLibFilePath(compilerOptions).replace(/\\/g, '/');
   }

@@ -1,10 +1,10 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
-import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
+import { wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult } from './diffing-broccoli-plugin';
 
 var minimatch = require('minimatch');
-var FILE_ENCODING = {encoding: 'utf-8'};
+var FILE_ENCODING = { encoding: 'utf-8' };
 
 /**
  * Intercepts each changed file and replaces its contents with
@@ -12,7 +12,7 @@ var FILE_ENCODING = {encoding: 'utf-8'};
  */
 class DiffingReplace implements DiffingBroccoliPlugin {
   // TODO: define an interface for options
-  constructor(private inputPath: string, private cachePath: string, private options: any) {}
+  constructor(private inputPath: string, private cachePath: string, private options: any) { }
 
   rebuild(treeDiff: DiffResult) {
     var patterns = this.options.patterns;

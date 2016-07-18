@@ -2,7 +2,7 @@ import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
 var symlinkOrCopySync = require('symlink-or-copy').sync;
-import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
+import { wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult } from './diffing-broccoli-plugin';
 
 var isWindows = process.platform === 'win32';
 
@@ -10,7 +10,7 @@ export interface MergeTreesOptions { overwrite?: boolean; }
 
 function outputFileSync(sourcePath: string, destPath: string) {
   let dirname = path.dirname(destPath);
-  fse.mkdirsSync(dirname, {fs: fs});
+  fse.mkdirsSync(dirname, { fs: fs });
   symlinkOrCopySync(sourcePath, destPath);
 }
 
@@ -20,12 +20,12 @@ function pathOverwrittenError(path: string) {
 }
 
 export class MergeTrees implements DiffingBroccoliPlugin {
-  private pathCache: {[key: string]: number[]} = Object.create(null);
+  private pathCache: { [key: string]: number[] } = Object.create(null);
   public options: MergeTreesOptions;
   private firstBuild: boolean = true;
 
   constructor(
-      public inputPaths: string[], public cachePath: string, options: MergeTreesOptions = {}) {
+    public inputPaths: string[], public cachePath: string, options: MergeTreesOptions = {}) {
     this.options = options || {};
   }
 
@@ -33,7 +33,7 @@ export class MergeTrees implements DiffingBroccoliPlugin {
     let overwrite = this.options.overwrite;
     let pathsToEmit: string[] = [];
     let pathsToRemove: string[] = [];
-    let emitted: {[key: string]: boolean} = Object.create(null);
+    let emitted: { [key: string]: boolean } = Object.create(null);
     let contains = (cache: number[], val: number) => {
       for (let i = 0, ii = cache.length; i < ii; ++i) {
         if (cache[i] === val) return true;

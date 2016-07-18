@@ -23,7 +23,7 @@ class TreeStabilizer implements BroccoliTree {
   outputPath: string;
 
 
-  constructor(public inputTree: BroccoliTree) {}
+  constructor(public inputTree: BroccoliTree) { }
 
 
   rebuild() {
@@ -35,7 +35,7 @@ class TreeStabilizer implements BroccoliTree {
   }
 
 
-  cleanup() {}
+  cleanup() { }
 }
 
 

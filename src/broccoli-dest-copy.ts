@@ -4,14 +4,14 @@
 import fs = require('fs');
 import fse = require('fs-extra');
 import path = require('path');
-import {wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult} from './diffing-broccoli-plugin';
+import { wrapDiffingPlugin, DiffingBroccoliPlugin, DiffResult } from './diffing-broccoli-plugin';
 
 /**
  * Intercepts each file as it is copied to the destination tempdir,
  * and tees a copy to the given path outside the tmp dir.
  */
 class DestCopy implements DiffingBroccoliPlugin {
-  constructor(private inputPath: string, private cachePath: string, private outputRoot: string) {}
+  constructor(private inputPath: string, private cachePath: string, private outputRoot: string) { }
 
 
   rebuild(treeDiff: DiffResult) {
