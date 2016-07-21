@@ -31,6 +31,7 @@ export interface LoadedOptions {
 /**
  * Load the given tsconfig.json file.
  * If a relative baseUrl is present it is adjusted to the absolute path.
+ * The noEmit configuration will be removed if present.
  */
 function loadTsconfig(tsconfigPath: string): LoadedOptions {
   if (tsconfigPath) {
@@ -38,6 +39,9 @@ function loadTsconfig(tsconfigPath: string): LoadedOptions {
     let options = content['compilerOptions'];
     if (options['baseUrl'] && !path.isAbsolute(options['baseUrl'])) {
       options['baseUrl'] = path.join(path.dirname(tsconfigPath), options['baseUrl']);
+    }
+    if(options['noEmit']) {
+      delete(options['noEmit']);
     }
     return ts.convertCompilerOptionsFromJson(options, tsconfigPath);
   }
