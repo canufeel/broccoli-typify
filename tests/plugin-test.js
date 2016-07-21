@@ -174,44 +174,4 @@ describe('transpile Typescript', function() {
     });
   });
 
-  describe('imports declarations', function(){
-    this.timeout(10000);
-
-    it('compiles ember component', function(){
-      builder = new broccoli.Builder(Compiler('tests/fixtures/ember',  {tsOptions: toTypescriptOptions(SANE_OPTIONS).options}));
-
-      return builder.build().then(function(results) {
-        var outputPath = results.directory;
-        var entries = walkSync.entries(outputPath);
-        expect(entries).to.have.length(1);
-
-        var output = fs.readFileSync(outputPath + '/ts-component.js', 'UTF8').replace(/\s+/g, ' ');
-        var wanted = fs.readFileSync(expectations + '/ts-component.js', 'UTF8').replace(/\s+/g, ' ');
-
-        expect(output).to.eql(wanted);
-
-      });
-    });
-
-    it('loads the environment declaration', function(){
-      builder = new broccoli.Builder(Compiler('tests/fixtures/ember-config',
-      {
-        tsOptions: toTypescriptOptions(SANE_OPTIONS).options,
-        localTypesFolder: 'tests/fixtures/local-types'
-        }));
-
-      return builder.build().then(function(results) {
-        var outputPath = results.directory;
-        var entries = walkSync.entries(outputPath);
-        expect(entries).to.have.length(1);
-
-        var output = fs.readFileSync(outputPath + '/config-import.js', 'UTF8').replace(/\s+/g, ' ');
-        var wanted = fs.readFileSync(expectations + '/config-import.js', 'UTF8').replace(/\s+/g, ' ');
-
-        expect(output).to.eql(wanted);
-
-      });
-
-    });
-  });
 });

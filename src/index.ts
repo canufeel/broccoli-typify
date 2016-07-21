@@ -6,6 +6,7 @@ import { Compiler as BroccoliCompiler, DiffingCompilerOptions } from './broccoli
 import * as ts from 'typescript';
 import findConfig from './find-config';
 import fs = require('fs');
+import path = require('path');
 
 let debug = debugImport('broccoli-typify:main');
 
@@ -29,12 +30,16 @@ export interface LoadedOptions {
 
 /**
  * Load the given tsconfig.json file.
+ * If a relative baseUrl is present it is adjusted to the absolute path.
  */
-
 function loadTsconfig(tsconfigPath: string): LoadedOptions {
   if (tsconfigPath) {
-    var content = JSON.parse(fs.readFileSync(tsconfigPath).toString('utf8'));
-    return ts.convertCompilerOptionsFromJson(content['compilerOptions'], tsconfigPath);
+    let content = JSON.parse(fs.readFileSync(tsconfigPath).toString('utf8'));
+    let options = content['compilerOptions'];
+    if (options['baseUrl'] && !path.isAbsolute(options['baseUrl'])) {
+      options['baseUrl'] = path.join(path.dirname(tsconfigPath), options['baseUrl']);
+    }
+    return ts.convertCompilerOptionsFromJson(options, tsconfigPath);
   }
   return {
     options: undefined, errors: [{

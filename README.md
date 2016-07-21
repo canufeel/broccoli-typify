@@ -12,11 +12,11 @@ https://github.com/tildeio/broccoli-typescript-compiler
 
 ## Resolution
 
-The imports of the type 'npm:<dependency>' expect have
-corresponding type information either under node_modules/@types
-or local-types. The latter location is provided to allow quick iterations
-on type definitions before they are contributed back to @types.
+Most of the resolution needs can be handled with settings in the tsconfig.json file.
+https://github.com/Microsoft/TypeScript/issues/9834
 
-For imports of ember itself the type information is additionally
-looked under node_modules/at-types-ember, the type definition
-is still being stabilized.
+
+## Ember-cli integration
+
+In the context of broccoli plugins a relative baseUrl does not work, it needs to
+point to the location of tsconfig file (or rather be relative to it).

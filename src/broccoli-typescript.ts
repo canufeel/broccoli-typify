@@ -298,43 +298,12 @@ class CustomLanguageServiceHost implements ts.LanguageServiceHost {
     return moduleNames.map(name => {
       // first try the default resolution
       let result = ts.resolveModuleName(name, containingFile, this.compilerOptions, { fileExists, readFile });
-      if (result.resolvedModule) {
-        return result.resolvedModule;
-      }
-      let candidatePaths: string[] = [];
-
-      if (name === 'ember') {
-        // custom repo for ember resolution while we stabilize the type definition
-        candidatePaths.push(`${this.currentDirectory}/node_modules/at-types-ember/index.d.ts`);
-      }
-      if (name.match(/\/config\/environment$/)) {
-        candidatePaths.push(`${this.localTypesFolder}/ember-config-environment.d.ts`);
-      } else {
-        // resolve npm: modules as loaded with ember-browserify.
-        // the end goal is to have all the types coming from npm @types,
-        // however we support a local-types for development.
-        const module = (name.indexOf('npm:') === 0) ? name.split(':')[1] : name;
-        candidatePaths.push(`${this.localTypesFolder}/${module}/index.d.ts`);
-        candidatePaths.push(`${this.currentDirectory}/node_modules/@types/${module}/index.d.ts`);
-      }
-      for (let i = 0; i < candidatePaths.length; i++) {
-        if (fs.existsSync(candidatePaths[i])) {
-          return {
-            resolvedFileName: candidatePaths[i],
-            isExternalLibraryImport: true
-          }
-        }
-      }
-      (`[name ${this.instanceName}] resolveModuleNames skipping module '${name}'`);
-      return undefined;
+        return result && result.resolvedModule;
     });
   }
 }
 
 export var Compiler = wrapDiffingPlugin(DiffingTSCompiler);
-
-
-
 
 function clone<T>(object: T): T {
   const result: any = {};
