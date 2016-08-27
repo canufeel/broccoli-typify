@@ -1,5 +1,8 @@
 Process typescript files and resolves type defintions to @types.
 
+[Travis build status:] (https://travis-ci.org/winding-lines/broccoli-typify) ![Travis build status]
+(https://travis-ci.org/winding-lines/broccoli-typify.svg?branch=master)
+
 ## Credits
 
 Broccoli typescript interfaces extracted from Angular:
